@@ -35,6 +35,12 @@ All TS types are lost in the process.
 
 :::
 
+:::info
+
+[Lazy schemas](../16-lazy/index.md) (e.g. recursive schemas) are serialized as references (`{ $ref: 'lazy_1' }`), the root DTO containing a `$schema_defs` object mapping each reference to its schema DTO. See [Lazy > Actions](../16-lazy/index.md#actions) for more details.
+
+:::
+
 :::caution
 
 Note that **functions are not serializable**, so parts of the schema may be lost in the process:

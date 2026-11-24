@@ -187,7 +187,8 @@ describe('lazy', () => {
       expect(() => expr.check()).not.toThrow()
       expect(expr.match('num')).toBe(num)
       expect(expr.match('add')).toBe(add)
-      expect(expr.match('neg')).toBe(neg.resolve())
+      // Lazy elements match as themselves (lazy props are applied as usual)
+      expect(expr.match('neg')).toBe(neg)
     })
   })
 

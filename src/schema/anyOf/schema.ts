@@ -251,7 +251,13 @@ const getDiscriminations = (
       }
 
       visitedLazySchemas.add(schema)
-      return getDiscriminations(schema.resolve(), discriminator, visitedLazySchemas)
+
+      // Matches resolve to the lazy schema itself so lazy props (validators etc.) are applied as usual
+      return Object.fromEntries(
+        Object.keys(getDiscriminations(schema.resolve(), discriminator, visitedLazySchemas)).map(
+          discriminatorValue => [discriminatorValue, schema]
+        )
+      )
     }
     case 'map': {
       const discriminations: Record<string, Schema> = {}

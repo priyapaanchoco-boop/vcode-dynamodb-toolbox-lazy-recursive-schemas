@@ -73,3 +73,35 @@ export const getZodSchemaCache = () => {
     }
   }
 }
+
+/**
+ * `z.discriminatedUnion` options must be objects (not `z.lazy`):
+ * Lazy elements resolving to maps are replaced by the resolved map.
+ * LIMITATION: Like other validators (ZodEffects are not valid options), lazy validators are not supported here.
+ */
+export const getDiscriminatedUnionElement = (element: Schema): Schema => {
+  if (element.type !== 'lazy') {
+    return element
+  }
+
+  let resolved = element.resolve()
+  const visitedLazySchemas = new Set<Schema>([element])
+  while (resolved.type === 'lazy' && !visitedLazySchemas.has(resolved)) {
+    visitedLazySchemas.add(resolved)
+    resolved = resolved.resolve()
+  }
+
+  if (resolved.type !== 'map') {
+    return element
+  }
+
+  // Lazy props take precedence (anyOf elements are always required & not defaulted)
+  const resolvedWithoutDefaults = withoutDefaults(resolved)
+  return Object.assign(
+    Object.create(Object.getPrototypeOf(resolved) as object) as Schema,
+    resolved,
+    {
+      props: { ...resolvedWithoutDefaults.props, required: 'atLeastOnce' }
+    }
+  )
+}

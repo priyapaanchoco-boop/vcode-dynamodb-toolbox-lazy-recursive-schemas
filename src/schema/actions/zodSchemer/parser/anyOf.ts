@@ -4,7 +4,7 @@ import type { AnyOfSchema, Schema } from '~/schema/index.js'
 import type { Overwrite } from '~/types/overwrite.js'
 
 import type { WithValidate } from '../utils.js'
-import { withValidate } from '../utils.js'
+import { getDiscriminatedUnionElement, withValidate } from '../utils.js'
 import type { SchemaZodParser } from './schema.js'
 import { schemaZodParser } from './schema.js'
 import type { ZodParserOptions } from './types.js'
@@ -73,10 +73,9 @@ export const anyOfZodParser = (
     // LIMITATION: Does not support `savedAs` attributes for now as ZodEffects are not valid discriminatedUnion options
     zodFormatter = z.discriminatedUnion(
       discriminator,
-      schema.elements.map(element => schemaZodParser(element, { ...options, defined: true })) as [
-        z.ZodDiscriminatedUnionOption<string>,
-        ...z.ZodDiscriminatedUnionOption<string>[]
-      ]
+      schema.elements.map(element =>
+        schemaZodParser(getDiscriminatedUnionElement(element), { ...options, defined: true })
+      ) as [z.ZodDiscriminatedUnionOption<string>, ...z.ZodDiscriminatedUnionOption<string>[]]
     )
   } else {
     zodFormatter = z.union(

@@ -5,6 +5,7 @@ import type {
   AnySchema,
   ItemSchema,
   ItemUnextendedValue,
+  LazySchema,
   ListExtendedValue,
   ListSchema,
   MapExtendedValue,
@@ -19,6 +20,7 @@ import type {
   ResolveAnySchema,
   ResolvePrimitiveSchema,
   ResolveStringSchema,
+  ResolvedLazySchema,
   Schema,
   SchemaExtendedValue,
   SetExtendedValue,
@@ -329,4 +331,12 @@ export type UpdateValueInput<
             : never)
         | (SCHEMA extends AnyOfSchema
             ? UpdateValueInput<SCHEMA['elements'][number], OPTIONS, AVAILABLE_PATHS>
+            : never)
+        // Lazy props (required etc.) are applied above: Resolved schema value is computed as defined
+        | (SCHEMA extends LazySchema
+            ? UpdateValueInput<
+                ResolvedLazySchema<SCHEMA>,
+                Overwrite<OPTIONS, { defined: true }>,
+                AVAILABLE_PATHS
+              >
             : never)

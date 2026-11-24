@@ -4,7 +4,7 @@ import type { AnyOfSchema, Schema } from '~/schema/index.js'
 import type { Overwrite } from '~/types/overwrite.js'
 
 import type { WithValidate } from '../utils.js'
-import { withValidate } from '../utils.js'
+import { getDiscriminatedUnionElement, withValidate } from '../utils.js'
 import type { SchemaZodFormatter } from './schema.js'
 import { schemaZodFormatter } from './schema.js'
 import type { ZodFormatterOptions } from './types.js'
@@ -70,7 +70,7 @@ export const anyOfZodFormatter = (
     zodFormatter = z.discriminatedUnion(
       discriminator,
       schema.elements.map(element =>
-        schemaZodFormatter(element, { ...options, defined: true })
+        schemaZodFormatter(getDiscriminatedUnionElement(element), { ...options, defined: true })
       ) as [z.ZodDiscriminatedUnionOption<string>, ...z.ZodDiscriminatedUnionOption<string>[]]
     )
   } else {

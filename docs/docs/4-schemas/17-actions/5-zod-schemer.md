@@ -75,6 +75,8 @@ const zodSchema = schema.build(ZodSchemer).formatter()
 zodSchema.parse({})
 ```
 
+[Lazy schemas](../16-lazy/index.md) are transpiled to `z.lazy(...)` schemas. As their types are recursive, they are inferred from the schema values (not structurally).
+
 Due to some discrepancies between schema systems, [discriminated unions](../16-anyOf/index.md#discriminate) also suffer from some minor limitations:
 
 - **Discriminated AND remapped** `maps` cannot be transpiled:
