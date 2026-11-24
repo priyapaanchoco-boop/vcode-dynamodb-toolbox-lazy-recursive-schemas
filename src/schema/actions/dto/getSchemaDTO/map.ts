@@ -1,13 +1,18 @@
 import type { MapSchema } from '~/schema/map/index.js'
 
 import type { MapSchemaDTO } from '../types.js'
+import type { SchemaDTOContext } from './context.js'
+import { createSchemaDTOContext } from './context.js'
 import { getSchemaDTO } from './schema.js'
 import { getDefaultsDTO } from './utils.js'
 
 /**
  * @debt feature "handle defaults, links & validators DTOs"
  */
-export const getMapSchemaDTO = (schema: MapSchema): MapSchemaDTO => {
+export const getMapSchemaDTO = (
+  schema: MapSchema,
+  context: SchemaDTOContext = createSchemaDTOContext()
+): MapSchemaDTO => {
   const defaultsDTO = getDefaultsDTO(schema)
   const { required, hidden, key, savedAs } = schema.props
 
@@ -16,7 +21,7 @@ export const getMapSchemaDTO = (schema: MapSchema): MapSchemaDTO => {
     attributes: Object.fromEntries(
       Object.entries(schema.attributes).map(([attributeName, attribute]) => [
         attributeName,
-        getSchemaDTO(attribute)
+        getSchemaDTO(attribute, context)
       ])
     ),
     ...(required !== undefined && required !== 'atLeastOnce' ? { required } : {}),

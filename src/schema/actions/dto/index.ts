@@ -4,5 +4,8 @@ export type {
   ISchemaDTO,
   ItemSchemaDTO,
   StringSchemaTransformerDTO,
-  AnySchemaTransformerDTO
+  AnySchemaTransformerDTO,
+  LazySchemaRefDTO,
+  NonRefSchemaDTO,
+  SchemaDefsDTO
 } from './types.js'

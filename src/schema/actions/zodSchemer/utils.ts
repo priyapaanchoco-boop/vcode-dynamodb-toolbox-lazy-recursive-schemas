@@ -33,3 +33,43 @@ export const withValidate = (schema: Schema, zodSchema: z.ZodTypeAny): z.ZodType
 
   return zodSchema
 }
+
+const defaultPropKeys = ['keyDefault', 'putDefault', 'updateDefault'] as const
+
+/**
+ * Lazy props take precedence over the resolved schema ones: Returns a shallow copy of the schema without defaults
+ */
+export const withoutDefaults = <SCHEMA extends Schema>(schema: SCHEMA): SCHEMA => {
+  if (defaultPropKeys.every(propKey => schema.props[propKey] === undefined)) {
+    return schema
+  }
+
+  const props: Record<string, unknown> = { ...schema.props }
+  for (const propKey of defaultPropKeys) {
+    delete props[propKey]
+  }
+
+  return Object.assign(Object.create(Object.getPrototypeOf(schema) as object) as SCHEMA, schema, {
+    props
+  })
+}
+
+/**
+ * Caches zod schemas by lazy schema & options: Recursive references re-use the same zod schema
+ */
+export const getZodSchemaCache = () => {
+  const cache = new WeakMap<Schema, Map<string, z.ZodTypeAny>>()
+
+  return {
+    get: (schema: Schema, options: object): z.ZodTypeAny | undefined =>
+      cache.get(schema)?.get(JSON.stringify(options)),
+    set: (schema: Schema, options: object, zodSchema: z.ZodTypeAny): void => {
+      let schemaCache = cache.get(schema)
+      if (schemaCache === undefined) {
+        schemaCache = new Map()
+        cache.set(schema, schemaCache)
+      }
+      schemaCache.set(JSON.stringify(options), zodSchema)
+    }
+  }
+}

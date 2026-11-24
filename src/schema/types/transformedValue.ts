@@ -7,6 +7,7 @@ import type {
   BinarySchema,
   BooleanSchema,
   ItemSchema,
+  LazySchema,
   ListSchema,
   MapSchema,
   Never,
@@ -19,6 +20,7 @@ import type {
   ResolveBooleanSchema,
   ResolveNumberSchema,
   ResolveStringSchema,
+  ResolvedLazySchema,
   ResolvedNullSchema,
   ResolvedPrimitiveSchema,
   Schema,
@@ -94,6 +96,7 @@ type SchemaTransformedValue<
       | (SCHEMA extends MapSchema ? MapSchemaTransformedValue<SCHEMA, OPTIONS> : never)
       | (SCHEMA extends RecordSchema ? RecordSchemaTransformedValue<SCHEMA, OPTIONS> : never)
       | (SCHEMA extends AnyOfSchema ? AnyOfSchemaTransformedValue<SCHEMA, OPTIONS> : never)
+      | (SCHEMA extends LazySchema ? LazySchemaTransformedValue<SCHEMA, OPTIONS> : never)
 
 type AnySchemaTransformedValue<
   SCHEMA extends AnySchema,
@@ -251,3 +254,13 @@ type MapAnyOfSchemaTransformedValue<
   : [RESULTS] extends [never]
     ? unknown
     : RESULTS
+
+// Lazy props take precedence: Resolved schema value is computed as defined
+type LazySchemaTransformedValue<
+  SCHEMA extends LazySchema,
+  OPTIONS extends WriteValueOptions = {}
+> = LazySchema extends SCHEMA
+  ? unknown
+  :
+      | If<MustBeDefined<SCHEMA, OPTIONS>, never, undefined>
+      | SchemaTransformedValue<ResolvedLazySchema<SCHEMA>, Overwrite<OPTIONS, { defined: true }>>

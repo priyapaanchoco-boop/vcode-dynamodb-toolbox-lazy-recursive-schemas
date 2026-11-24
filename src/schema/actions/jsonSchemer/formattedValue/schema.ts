@@ -2,6 +2,7 @@ import type {
   AnyOfSchema,
   AnySchema,
   ItemSchema,
+  LazySchema,
   ListSchema,
   MapSchema,
   PrimitiveSchema,
@@ -12,8 +13,12 @@ import type {
 
 import type { FormattedAnyOfJSONSchema } from './anyOf.js'
 import { getFormattedAnyOfJSONSchema } from './anyOf.js'
+import type { JSONSchemerContext } from './context.js'
+import { createJSONSchemerContext } from './context.js'
 import type { FormattedItemJSONSchema } from './item.js'
 import { getFormattedItemJSONSchema } from './item.js'
+import type { FormattedLazyJSONSchema } from './lazy.js'
+import { getFormattedLazyJSONSchema } from './lazy.js'
 import type { FormattedListJSONSchema } from './list.js'
 import { getFormattedListJSONSchema } from './list.js'
 import type { FormattedMapJSONSchema } from './map.js'
@@ -35,10 +40,12 @@ export type FormattedValueJSONSchema<SCHEMA extends Schema> = Schema extends SCH
       | (SCHEMA extends MapSchema ? FormattedMapJSONSchema<SCHEMA> : never)
       | (SCHEMA extends RecordSchema ? FormattedRecordJSONSchema<SCHEMA> : never)
       | (SCHEMA extends AnyOfSchema ? FormattedAnyOfJSONSchema<SCHEMA> : never)
+      | (SCHEMA extends LazySchema ? FormattedLazyJSONSchema : never)
       | (SCHEMA extends ItemSchema ? FormattedItemJSONSchema<SCHEMA> : never)
 
 export const getFormattedValueJSONSchema = <SCHEMA extends Schema>(
-  schema: SCHEMA
+  schema: SCHEMA,
+  context: JSONSchemerContext = createJSONSchemerContext()
 ): FormattedValueJSONSchema<SCHEMA> => {
   type RESPONSE = FormattedValueJSONSchema<SCHEMA>
 
@@ -52,16 +59,18 @@ export const getFormattedValueJSONSchema = <SCHEMA extends Schema>(
     case 'binary':
       return getFormattedPrimitiveJSONSchema(schema) as RESPONSE
     case 'set':
-      return getFormattedSetJSONSchema(schema) as RESPONSE
+      return getFormattedSetJSONSchema(schema, context) as RESPONSE
     case 'list':
-      return getFormattedListJSONSchema(schema) as RESPONSE
+      return getFormattedListJSONSchema(schema, context) as RESPONSE
     case 'map':
-      return getFormattedMapJSONSchema(schema) as RESPONSE
+      return getFormattedMapJSONSchema(schema, context) as RESPONSE
     case 'record':
-      return getFormattedRecordJSONSchema(schema) as RESPONSE
+      return getFormattedRecordJSONSchema(schema, context) as RESPONSE
     case 'anyOf':
-      return getFormattedAnyOfJSONSchema(schema) as RESPONSE
+      return getFormattedAnyOfJSONSchema(schema, context) as RESPONSE
+    case 'lazy':
+      return getFormattedLazyJSONSchema(schema, context) as RESPONSE
     case 'item':
-      return getFormattedItemJSONSchema(schema) as RESPONSE
+      return getFormattedItemJSONSchema(schema, context) as RESPONSE
   }
 }

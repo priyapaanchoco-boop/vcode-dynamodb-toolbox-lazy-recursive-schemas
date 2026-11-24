@@ -1,7 +1,7 @@
 import type { Entity } from '~/entity/index.js'
 import { EntityAction } from '~/entity/index.js'
 import { SchemaDTO } from '~/schema/actions/dto/index.js'
-import type { ItemSchemaDTO } from '~/schema/actions/dto/types.js'
+import type { ISchemaDTO, ItemSchemaDTO } from '~/schema/actions/dto/types.js'
 import { ItemSchema } from '~/schema/item/schema.js'
 import type { ITableDTO } from '~/table/actions/dto/index.js'
 import { TableDTO } from '~/table/actions/dto/index.js'
@@ -39,7 +39,7 @@ export class EntityDTO<ENTITY extends Entity = Entity>
 
     const { partitionKey, sortKey } = this.entity.table
     const partitionKeyAttr = Object.entries(constructorShemaDTO.attributes).find(
-      ([attrName, attr]) => (attr.savedAs ?? attrName) === partitionKey.name
+      ([attrName, attr]) => getSavedAs(constructorShemaDTO, attrName, attr) === partitionKey.name
     )
     if (partitionKeyAttr === undefined) {
       constructorShemaDTO.attributes[partitionKey.name] = {
@@ -52,7 +52,7 @@ export class EntityDTO<ENTITY extends Entity = Entity>
 
     if (sortKey !== undefined) {
       const sortKeyAttr = Object.entries(constructorShemaDTO.attributes).find(
-        ([attrName, attr]) => (attr.savedAs ?? attrName) === sortKey.name
+        ([attrName, attr]) => getSavedAs(constructorShemaDTO, attrName, attr) === sortKey.name
       )
 
       if (sortKeyAttr === undefined) {
@@ -81,4 +81,11 @@ export class EntityDTO<ENTITY extends Entity = Entity>
       table: this.table.toJSON()
     }
   }
+}
+
+const getSavedAs = (schemaDTO: SchemaDTO, attrName: string, attrDTO: ISchemaDTO): string => {
+  // Lazy schemas are serialized as refs: Props live in the definition
+  const resolvedDTO = '$ref' in attrDTO ? schemaDTO.$schema_defs?.[attrDTO.$ref] : attrDTO
+
+  return resolvedDTO?.savedAs ?? attrName
 }

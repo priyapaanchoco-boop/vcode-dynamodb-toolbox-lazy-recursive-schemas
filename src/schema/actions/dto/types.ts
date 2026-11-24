@@ -180,6 +180,13 @@ export interface AnyOfSchemaDTO extends SchemaPropsDTO {
   discriminator?: string
 }
 
+/**
+ * Reference to a schema definition (see `ItemSchemaDTO['$schema_defs']`), used for lazy (recursive) schemas
+ */
+export interface LazySchemaRefDTO {
+  $ref: string
+}
+
 export interface ItemSchemaDTO extends SchemaPropsDTO {
   type: 'item'
   attributes: {
@@ -195,7 +202,12 @@ export interface ItemSchemaDTO extends SchemaPropsDTO {
       | MapSchemaDTO
       | RecordSchemaDTO
       | AnyOfSchemaDTO
+      | LazySchemaRefDTO
   }
+  /**
+   * Definitions of lazy (recursive) schemas, by reference
+   */
+  $schema_defs?: SchemaDefsDTO
 }
 
 export type ISchemaDTO =
@@ -211,3 +223,8 @@ export type ISchemaDTO =
   | RecordSchemaDTO
   | AnyOfSchemaDTO
   | ItemSchemaDTO
+  | LazySchemaRefDTO
+
+export type NonRefSchemaDTO = Exclude<ISchemaDTO, LazySchemaRefDTO>
+
+export type SchemaDefsDTO = { [ref: string]: NonRefSchemaDTO }

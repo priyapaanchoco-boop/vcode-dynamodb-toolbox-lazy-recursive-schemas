@@ -3,6 +3,7 @@ import type {
   AnyOfSchema,
   AnySchema,
   ItemSchema,
+  LazySchema,
   ListSchema,
   MapSchema,
   Never,
@@ -11,6 +12,7 @@ import type {
   ResolveAnySchema,
   ResolvePrimitiveSchema,
   ResolveStringSchema,
+  ResolvedLazySchema,
   ResolvedPrimitiveSchema,
   Schema,
   SetSchema
@@ -92,6 +94,7 @@ type SchemaInputValue<
       | (SCHEMA extends MapSchema ? MapSchemaInputValue<SCHEMA, OPTIONS> : never)
       | (SCHEMA extends RecordSchema ? RecordSchemaInputValue<SCHEMA, OPTIONS> : never)
       | (SCHEMA extends AnyOfSchema ? AnyOfSchemaInputValue<SCHEMA, OPTIONS> : never)
+      | (SCHEMA extends LazySchema ? LazySchemaInputValue<SCHEMA, OPTIONS> : never)
 
 type AnySchemaInputValue<
   SCHEMA extends AnySchema,
@@ -189,3 +192,13 @@ type AnyOfSchemaInputValue<
       | If<MustBeProvided<SCHEMA, OPTIONS>, never, undefined>
       | SchemaExtendedWriteValue<SCHEMA, OPTIONS>
       | SchemaInputValue<SCHEMA['elements'][number], OPTIONS>
+
+// Lazy props take precedence: Resolved schema value is computed as defined
+type LazySchemaInputValue<
+  SCHEMA extends LazySchema,
+  OPTIONS extends WriteValueOptions = {}
+> = LazySchema extends SCHEMA
+  ? unknown
+  :
+      | If<MustBeProvided<SCHEMA, OPTIONS>, never, undefined>
+      | SchemaInputValue<ResolvedLazySchema<SCHEMA>, Overwrite<OPTIONS, { defined: true }>>

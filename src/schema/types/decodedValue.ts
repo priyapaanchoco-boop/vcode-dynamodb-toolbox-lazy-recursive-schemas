@@ -4,6 +4,7 @@ import type {
   BinarySchema,
   BooleanSchema,
   ItemSchema,
+  LazySchema,
   ListSchema,
   MapSchema,
   Never,
@@ -15,6 +16,7 @@ import type {
   ResolveBooleanSchema,
   ResolveNumberSchema,
   ResolveStringSchema,
+  ResolvedLazySchema,
   ResolvedNullSchema,
   Schema,
   SetSchema,
@@ -105,6 +107,7 @@ type SchemaDecodedValue<
       | (SCHEMA extends MapSchema ? MapSchemaDecodedValue<SCHEMA, OPTIONS> : never)
       | (SCHEMA extends RecordSchema ? RecordSchemaDecodedValue<SCHEMA, OPTIONS> : never)
       | (SCHEMA extends AnyOfSchema ? AnyOfSchemaDecodedValue<SCHEMA, OPTIONS> : never)
+      | (SCHEMA extends LazySchema ? LazySchemaDecodedValue<SCHEMA, OPTIONS> : never)
 
 type AnySchemaDecodedValue<SCHEMA extends AnySchema> = AnySchema extends SCHEMA
   ? unknown
@@ -279,3 +282,22 @@ type MapAnyOfSchemaDecodedValue<
   : [RESULTS] extends [never]
     ? unknown
     : RESULTS
+
+// Lazy props take precedence over resolved schema `required` prop
+// NOTE: Projections inside lazy schemas are not typed (Paths stop at lazy schemas)
+type LazySchemaDecodedValue<
+  SCHEMA extends LazySchema,
+  OPTIONS extends ReadValueOptions<SCHEMA> = {}
+> = LazySchema extends SCHEMA
+  ? unknown
+  : OPTIONS extends { attributes: string }
+    ? unknown
+    :
+        | If<MustBeDefined<SCHEMA>, never, undefined>
+        | Exclude<
+            SchemaDecodedValue<
+              ResolvedLazySchema<SCHEMA>,
+              Overwrite<OPTIONS, { attributes: undefined }>
+            >,
+            undefined
+          >

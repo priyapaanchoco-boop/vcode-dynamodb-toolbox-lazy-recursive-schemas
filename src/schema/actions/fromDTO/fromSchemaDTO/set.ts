@@ -4,22 +4,27 @@ import { set } from '~/schema/set/index.js'
 import type { SetElementSchema } from '~/schema/set/types.js'
 
 import { fromSchemaDTO } from './attribute.js'
+import type { FromSchemaDTOContext } from './context.js'
+import { createFromSchemaDTOContext } from './context.js'
 
 type SetSchemaDTO = Extract<ISchemaDTO, { type: 'set' }>
 
 /**
  * @debt feature "handle defaults, links & validators"
  */
-export const fromSetSchemaDTO = ({
-  keyDefault,
-  putDefault,
-  updateDefault,
-  keyLink,
-  putLink,
-  updateLink,
-  elements,
-  ...props
-}: SetSchemaDTO): SetSchema => {
+export const fromSetSchemaDTO = (
+  {
+    keyDefault,
+    putDefault,
+    updateDefault,
+    keyLink,
+    putLink,
+    updateLink,
+    elements,
+    ...props
+  }: SetSchemaDTO,
+  context: FromSchemaDTOContext = createFromSchemaDTOContext()
+): SetSchema => {
   keyDefault
   putDefault
   updateDefault
@@ -27,5 +32,5 @@ export const fromSetSchemaDTO = ({
   putLink
   updateLink
 
-  return set(fromSchemaDTO(elements) as SetElementSchema, props)
+  return set(fromSchemaDTO(elements, context) as SetElementSchema, props)
 }
