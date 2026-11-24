@@ -1,4 +1,5 @@
 import { Path } from '~/schema/actions/utils/path.js'
+import type { MapSchema } from '~/schema/index.js'
 import {
   AnySchema,
   any,
@@ -6,6 +7,7 @@ import {
   binary,
   boolean,
   item,
+  lazy,
   list,
   map,
   nul,
@@ -210,6 +212,40 @@ describe('finder', () => {
           transformedPath: new Path('anyOf._st')
         })
       ])
+    })
+  })
+
+  describe('lazy schemas', () => {
+    const node = map({
+      value: number().savedAs('v'),
+      children: list(lazy((): MapSchema => node))
+    })
+    const tree = lazy((): MapSchema => node).savedAs('t')
+    const schema = item({ tree })
+
+    test('returns lazy schema itself if path ends on it', () => {
+      expect(schema.build(Finder).search('tree')).toStrictEqual([
+        new SubSchema({
+          schema: tree,
+          formattedPath: Path.fromArray(['tree']),
+          transformedPath: Path.fromArray(['t'])
+        })
+      ])
+    })
+
+    test('finds sub-schemas through (recursive) lazy schemas', () => {
+      expect(schema.build(Finder).search('tree.children[1].children[0].value')).toStrictEqual([
+        new SubSchema({
+          schema: node.attributes.value,
+          formattedPath: Path.fromArray(['tree', 'children', 1, 'children', 0, 'value']),
+          transformedPath: Path.fromArray(['t', 'children', 1, 'children', 0, 'v'])
+        })
+      ])
+    })
+
+    test('returns no sub-schema on invalid paths', () => {
+      expect(schema.build(Finder).search('tree.children[1].unknown')).toStrictEqual([])
+      expect(schema.build(Finder).search('tree.children.value')).toStrictEqual([])
     })
   })
 })

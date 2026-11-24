@@ -3,6 +3,7 @@ import type {
   AnyOfSchema,
   AnySchema,
   ItemSchema,
+  LazySchema,
   ListSchema,
   MapSchema,
   Never,
@@ -10,6 +11,7 @@ import type {
   RecordSchema,
   ResolveAnySchema,
   ResolvePrimitiveSchema,
+  ResolvedLazySchema,
   ResolvedPrimitiveSchema,
   Schema,
   SetSchema
@@ -75,6 +77,7 @@ type SchemaValidValue<
       | (SCHEMA extends MapSchema ? MapSchemaValidValue<SCHEMA, OPTIONS> : never)
       | (SCHEMA extends RecordSchema ? RecordSchemaValidValue<SCHEMA, OPTIONS> : never)
       | (SCHEMA extends AnyOfSchema ? AnyOfSchemaValidValue<SCHEMA, OPTIONS> : never)
+      | (SCHEMA extends LazySchema ? LazySchemaValidValue<SCHEMA, OPTIONS> : never)
 
 type AnySchemaValidValue<
   SCHEMA extends AnySchema,
@@ -190,3 +193,12 @@ type MapAnyOfSchemaValidValue<
   : [RESULTS] extends [never]
     ? unknown
     : RESULTS
+
+type LazySchemaValidValue<
+  SCHEMA extends LazySchema,
+  OPTIONS extends WriteValueOptions = {}
+> = LazySchema extends SCHEMA
+  ? unknown
+  :
+      | If<MustBeDefined<SCHEMA, OPTIONS>, never, undefined>
+      | SchemaValidValue<ResolvedLazySchema<SCHEMA>, Overwrite<OPTIONS, { defined: true }>>

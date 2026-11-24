@@ -2,6 +2,7 @@ import type {
   AnyOfSchema,
   AnySchema,
   ItemSchema,
+  LazySchema,
   ListSchema,
   MapSchema,
   RecordSchema,
@@ -31,6 +32,8 @@ export type SchemaPaths<SCHEMA extends Schema, SCHEMA_PATH extends string = ''> 
   | (SCHEMA extends MapSchema ? MapSchemaPaths<SCHEMA, SCHEMA_PATH> : never)
   | (SCHEMA extends RecordSchema ? RecordSchemaPaths<SCHEMA, SCHEMA_PATH> : never)
   | (SCHEMA extends AnyOfSchema ? AnyOfSchemaPaths<SCHEMA, SCHEMA_PATH> : never)
+  // Lazy schemas can be recursive: We stop computing paths there (any child path is accepted)
+  | (SCHEMA extends LazySchema ? AnySchemaPaths<SCHEMA_PATH> : never)
 
 export type ItemSchemaPaths<SCHEMA extends ItemSchema = ItemSchema> = ItemSchema extends SCHEMA
   ? string

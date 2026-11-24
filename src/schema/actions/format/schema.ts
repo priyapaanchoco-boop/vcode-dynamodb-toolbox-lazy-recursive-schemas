@@ -76,5 +76,8 @@ export function* schemaFormatter<
       return yield* recordSchemaFormatter(schema, rawValue, options)
     case 'anyOf':
       return yield* anyOfSchemaFormatter(schema, rawValue, options)
+    case 'lazy':
+      // Required & hidden checks are made with the lazy props (here & in parent schemas)
+      return yield* schemaFormatter(schema.resolve(), rawValue, options)
   }
 }

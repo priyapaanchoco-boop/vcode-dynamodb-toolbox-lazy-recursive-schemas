@@ -1,3 +1,5 @@
+import type { LazySchema } from '../lazy/schema.js'
+import type { ResolvedLazySchema } from '../lazy/types.js'
 import type { MapSchema } from '../map/schema.js'
 import type { StringSchema } from '../string/schema.js'
 import type { Always, AtLeastOnce, Schema, SchemaProps } from '../types/index.js'
@@ -7,6 +9,7 @@ type ElementDiscriminator<ELEMENT extends Schema> = Schema extends ELEMENT
   ? string
   :
       | (ELEMENT extends AnyOfSchema ? Discriminator<ELEMENT['elements']> : never)
+      | (ELEMENT extends LazySchema ? ElementDiscriminator<ResolvedLazySchema<ELEMENT>> : never)
       | (ELEMENT extends MapSchema
           ? {
               [KEY in keyof ELEMENT['attributes']]: ELEMENT['attributes'][KEY] extends StringSchema

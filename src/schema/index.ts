@@ -3,6 +3,7 @@ import { anyOf } from './anyOf/index.js'
 import { binary } from './binary/index.js'
 import { boolean } from './boolean/index.js'
 import { item } from './item/index.js'
+import { lazy } from './lazy/index.js'
 import { list } from './list/index.js'
 import { map } from './map/index.js'
 import { nul } from './null/index.js'
@@ -25,6 +26,7 @@ export * from './list/index.js'
 export * from './map/index.js'
 export * from './record/index.js'
 export * from './anyOf/index.js'
+export * from './lazy/index.js'
 export * from './item/index.js'
 
 export { SchemaAction } from './schema.js'
@@ -41,6 +43,7 @@ export const schema: {
   map: typeof map
   record: typeof record
   anyOf: typeof anyOf
+  lazy: typeof lazy
   item: typeof item
 } = {
   any,
@@ -54,6 +57,7 @@ export const schema: {
   map,
   record,
   anyOf,
+  lazy,
   item
 }
 export const s = schema

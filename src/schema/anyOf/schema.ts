@@ -120,11 +120,19 @@ export class AnyOfSchema<
 
   get [$discriminators](): Record<string, string> {
     if (!this[$discriminators_][$computed]) {
-      Object.assign(
-        this[$discriminators_],
-        this.elements.map(getDiscriminators).reduce(intersectDiscriminators, undefined) ?? {},
-        { [$computed]: true }
-      )
+      computingDiscriminators.add(this)
+
+      try {
+        Object.assign(
+          this[$discriminators_],
+          this.elements
+            .map(element => getDiscriminators(element))
+            .reduce(intersectDiscriminators, undefined) ?? {},
+          { [$computed]: true }
+        )
+      } finally {
+        computingDiscriminators.delete(this)
+      }
     }
 
     return this[$discriminators_]
@@ -149,10 +157,28 @@ export class AnyOfSchema<
   }
 }
 
-const getDiscriminators = (schema: Schema): Record<string, string> | undefined => {
+// AnyOf schemas whose discriminators are being computed (prevents infinite loops in recursive schemas)
+const computingDiscriminators = new WeakSet<AnyOfSchema>()
+
+const getDiscriminators = (
+  schema: Schema,
+  visitedLazySchemas = new Set<Schema>()
+): Record<string, string> | undefined => {
   switch (schema.type) {
     case 'anyOf':
+      // Recursive anyOf (through lazy schemas): Neutral for intersection
+      if (computingDiscriminators.has(schema)) {
+        return undefined
+      }
+
       return schema[$discriminators]
+    case 'lazy':
+      if (visitedLazySchemas.has(schema)) {
+        return undefined
+      }
+
+      visitedLazySchemas.add(schema)
+      return getDiscriminators(schema.resolve(), visitedLazySchemas)
     case 'map': {
       const discriminators: Record<string, string> = {}
 
@@ -201,7 +227,11 @@ const intersectDiscriminators = (
   return intersectedDiscriminators
 }
 
-const getDiscriminations = (schema: Schema, discriminator: string): Record<string, Schema> => {
+const getDiscriminations = (
+  schema: Schema,
+  discriminator: string,
+  visitedLazySchemas = new Set<Schema>()
+): Record<string, Schema> => {
   switch (schema.type) {
     case 'anyOf': {
       let discriminations: Record<string, Schema> = {}
@@ -209,11 +239,19 @@ const getDiscriminations = (schema: Schema, discriminator: string): Record<strin
       for (const elementSchema of schema.elements) {
         discriminations = {
           ...discriminations,
-          ...getDiscriminations(elementSchema, discriminator)
+          ...getDiscriminations(elementSchema, discriminator, visitedLazySchemas)
         }
       }
 
       return discriminations
+    }
+    case 'lazy': {
+      if (visitedLazySchemas.has(schema)) {
+        return {}
+      }
+
+      visitedLazySchemas.add(schema)
+      return getDiscriminations(schema.resolve(), discriminator, visitedLazySchemas)
     }
     case 'map': {
       const discriminations: Record<string, Schema> = {}
